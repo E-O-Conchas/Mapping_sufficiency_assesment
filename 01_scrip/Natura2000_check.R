@@ -13,8 +13,8 @@ library(tidyverse)
 library(dplyr)
 
 # Path spatial and tabular data (set the path where the Natura 2000 file is located)
-natura_2000_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Data_sources/n2k_spatial_and_descriptive_end2022-21.03.2023/n2k_spatial/Natura 2000 Spatial Data Official Release ETRS89 LAEA.shp"
-natura_2000_tab_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Data_sources/n2k_spatial_and_descriptive_end2022-21.03.2023/n2k_descriptive_sensitive_species/NATURA2000SITES.txt"
+natura_2000_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/FME_60247F61_1692628888782_6276/SHAPE_1/OutputShape/Natura 2000 Spatial Data Official Release ETRS89 LAEA.shp"
+natura_2000_tab_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/Tabular/NATURA2000SITES.txt"
 
 
 # Open spatial data
@@ -59,7 +59,8 @@ check_duplicate_site_codes <- function(data, col_name) {
     print(paste("Duplicate site codes found in", col_name, "column:"))
     duplicate_sites <- data[duplicated_site_codes, c("SITECODE","SITENAME","RELEASE_DA","MS")]
     print(duplicate_sites)
-    write_sf(duplicate_sites, paste0("02_output/Natura_2000_duplicate_sites_", col_name, ".csv"), 
+    release_date <- unique(duplicate_sites$RELEASE_DA) 
+    write_sf(duplicate_sites, paste0("02_output/Natura_2000_duplicate_sites_release_",release_date, ".csv"), 
               quote = TRUE, sep = ",", fileEncoding = "UTF-8")
   } else {
     print(paste("No duplicate site codes found in", col_name, "column."))
@@ -69,7 +70,6 @@ check_duplicate_site_codes <- function(data, col_name) {
 # check duplicate site codes
 check_duplicate_site_codes(natura_2000, "SITECODE")
 check_duplicate_site_codes(natura_2000_tab, "SITECODE")
-
 
 
 
