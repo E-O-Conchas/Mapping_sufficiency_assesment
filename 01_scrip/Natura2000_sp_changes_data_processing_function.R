@@ -52,16 +52,21 @@ getwd()
 
 # Function
 
-save_combined_habitat_changes <- function(gpkg_file_path_2018, gpkg_file_path_2023, output_file_path) {
+save_combined_habitat_changes <- function(gpkg_file_2018, gpkg_file_2023, output_file) {
   # Read species spatial data 2018
-  spe_n2k_2018 <- st_read(gpkg_file_2018, layer = "n2k_PL_spe_ETRS89")
+  spe_n2k_2018 <- st_read(gpkg_file_2018, layer = "natura_2000_LT_species_ETRS89") # every time when you run the function set the layers name
   
   #Read species spatial data 2023 
-  spe_n2k_2023 <- st_read(gpkg_file_2023, layer = "n2k_PL_spe_ETRS89")
+  spe_n2k_2023 <- st_read(gpkg_file_2023, layer = "natura_2000_LT_species_ETRS89") # every time when you run the function set the layers name
   
   # Converto to data frame
   spe_n2k_2023 <- as.data.frame(spe_n2k_2023)
   spe_n2k_2018 <- as.data.frame(spe_n2k_2018)
+  
+  # Convert SPECIESCODE to character data type
+  spe_n2k_2023$SPECIESCODE <- as.integer(spe_n2k_2023$SPECIESCODE)
+  spe_n2k_2018$SPECIESCODE <- as.integer(spe_n2k_2018$SPECIESCODE)
+  
   
   # Correlation between Natura2000_2018 and Natura2000_2023
   species_changes <- spe_n2k_2023 
@@ -87,9 +92,6 @@ save_combined_habitat_changes <- function(gpkg_file_path_2018, gpkg_file_path_20
   # Eliminates all the NA values from the data frame 2018
   spe_n2k_2018 <- spe_n2k_2018[!is.na(spe_n2k_2018$SPECIESCODE),]
   
-  # Eliminates all the NA values from the data frame 2018
-  spe_n2k_2018 <- spe_n2k_2018[!is.na(spe_n2k_2018$SPECIESCODE),]
-  
   # Category "Deleted habitats/sites" as a data frame 
   deleted_species <- lapply(unique(spe_n2k_2018$SITECODE), function(site_code) {
     habitats_2018 <- spe_n2k_2018$SPECIESCODE[spe_n2k_2018$SITECODE == site_code]
@@ -111,7 +113,7 @@ save_combined_habitat_changes <- function(gpkg_file_path_2018, gpkg_file_path_20
   
   # Save as a geopackage
   country_code <- unique(changes_species_2018_2023_sf$MS)
-  geopackage_path <- file.path(output_file_path, paste0(country_code, "_species_changes_ETRS89.gpkg"))
+  geopackage_path <- file.path(output_file, paste0("natura_2000_", country_code, "_species_changes_ETRS89.gpkg"))
   
   # Write the sf object to the GeoPackage
   st_write(changes_species_2018_2023_sf, geopackage_path, driver = "GPKG")
@@ -119,7 +121,7 @@ save_combined_habitat_changes <- function(gpkg_file_path_2018, gpkg_file_path_20
   # Separate layers for each habitat code
   species_codes <- unique(changes_species_2018_2023_sf$SPECIESCODE)
   for (code in species_codes) {
-    species_data <- changes_species_2018_2023_sf[changes_species_2018_2023_sf$SPECIESCODE == code, ]
+    species_data <- changes_species_2018_2023_sf[changes_species_2018_2023_sf$SPECIESCODE == code, ] #posiblemente aqui este la solucion
     layer_name <- paste0("specie_", code)
     st_write(species_data, geopackage_path, layer = layer_name, driver = "GPKG", append = TRUE)
   }
@@ -128,17 +130,17 @@ save_combined_habitat_changes <- function(gpkg_file_path_2018, gpkg_file_path_20
   
 }
 
+# Common base path
+base_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Mapping/02_output/LT"
 
-
-
-# Usage
-gpkg_file_2018 <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/PL/Natura_2000_Network_2018/species/n2k_PL_spe_ETRS89.gpkg"
-gpkg_file_2023 <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/PL/Natura_2000_Network_2023/species/n2k_PL_spe_ETRS89.gpkg"
-output_file_path <-"I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/PL/Changes_Natura_2000_Network_2018_2023/species"
+# Usage:
+gpkg_file_2017 <- file.path(base_path, "Natura_2000_2017/natura_2000_LT_species_all_sites_ETRS89.gpkg")
+gpkg_file_2023 <- file.path(base_path, "Natura_2000_2023/natura_2000_LT_species_all_sites_ETRS89.gpkg")
+output_file <- file.path(base_path, "Natura_2000_changes_2017_2023")
 
 
 # Run the function
-save_combined_habitat_changes(gpkg_file_2018, gpkg_file_2023, output_file_path)
+save_combined_habitat_changes(gpkg_file_2017, gpkg_file_2023, output_file)
 
 
 
