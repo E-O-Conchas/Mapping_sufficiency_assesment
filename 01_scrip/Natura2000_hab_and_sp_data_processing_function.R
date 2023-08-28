@@ -14,9 +14,8 @@ rm(list=ls())
 gc()
 
 
-# Set the working directory
-setwd("I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/data")
-getwd()
+# Set the working directory if needed
+setwd()
 
 # Load libraries
 library(sf)
@@ -61,10 +60,11 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
                               multiple = "all")
   
   # Filter data for sites with habitats
-  habitats <- left_join_data[!is.na(left_join_data$HABITATCODE),] #don't run this line for the changes analysis
+  #habitats <- left_join_data[!is.na(left_join_data$HABITATCODE),] #don't run this line for the changes analysis
+  hab_n2k_ms <- left_join_data # run this line if you want to obtain all the natura 2000 sites
   
   # Changes name 
-  hab_n2k_ms <- habitats
+  #hab_n2k_ms <- habitats # don´n run this line if you want to obtain all the natura 2000 sites
   
   # Add a new column to indicate "D" for rows with "-" in RELSURFACE column
   hab_n2k_ms$RELSURFACE_D <- ifelse(hab_n2k_ms$RELSURFACE == "-", "D", 
@@ -77,10 +77,10 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
   country_code <- unique(hab_n2k_ms$MS)
   
   # Create the GeoPackage file path
-  geopackage_path <- file.path(output_path, paste0("n2k_", country_code, "_hab_ETRS89.gpkg"))
+  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_all_sites_ETRS89.gpkg"))
   
   # Create the GeoPackage and write the sf object
-  layer_name <- paste0("n2k_", country_code, "_hab_ETRS89")
+  layer_name <- paste0("natura_2000_", country_code, "_habitats_ETRS89")
   st_write(hab_n2k_ms_sf, geopackage_path, layer = layer_name, driver = "GPKG")
   
   # Create shapefiles for each habitat code in the GeoPackage
@@ -106,11 +106,11 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
 #define the paths of the files to process
 
 # File that contains Natura 2000 site data for Poland
-n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/LT/Natura_2000_Network_2018/n2k_LT_ETRS89.shp"
+n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Mapping/02_output/LT/Natura_2000_2017/natura_2000_LT_ETRS89.shp"
 # File that contains the tabular data for Natura 2000 habitats
-hab_n2k_tab_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/data/n2k_spatial_and_descriptive_end2018/Tabular_2/Natura2000_end2018_csv/HABITATS.txt"
+hab_n2k_tab_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/Tabular/HABITATS.txt"
 # Set the output folder
-output_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/LT/Natura_2000_Network_2018/Habitats"
+output_path <- "02_output/LT/Natura_2000_2017"
 
 
 # Call the function to process Natura 2000 data
@@ -155,10 +155,11 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
                               multiple = "all")
   
   # Filter data for sites with species
-  species <- left_join_data[!is.na(left_join_data$SPECIESCODE),] #don't run this line for the changes analysis 
+  #species <- left_join_data[!is.na(left_join_data$SPECIESCODE),] #don't run if you want to obtain all the natura 2000 sites 
+  spe_n2k_ms <- left_join_data # if you not run the above line, run this.
   
   # Rename the joined data frame
-  spe_n2k_ms <- species
+  #spe_n2k_ms <- species # if you not filter the data, dont run this line.
   
   # Convert to sf object
   spe_n2k_ms_sf <- st_as_sf(spe_n2k_ms)
@@ -167,10 +168,10 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
   country_code <- unique(spe_n2k_ms$MS)
   
   # Create the GeoPackage file path
-  geopackage_path <- file.path(output_path, paste0("n2k_", country_code, "_spe_ETRS89.gpkg"))
+  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_species_all_sites_ETRS89.gpkg"))
   
   # Create the GeoPackage and write the sf object
-  layer_name <- paste0("n2k_", country_code, "_spe_ETRS89")
+  layer_name <- paste0("natura_2000_", country_code, "_species_ETRS89")
   st_write(spe_n2k_ms_sf, geopackage_path, layer = layer_name, driver = "GPKG")
   
   # Create shapefiles for each species code in the GeoPackage
@@ -194,11 +195,11 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
 #define the paths of the files to process
 
 # File that contains Natura 2000 site data for the member state
-n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/LT/Natura_2000_Network_2018/n2k_LT_ETRS89.shp"
-# File that contains the tabular data for Natura 2000 habitats
-spe_n2k_tab_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/data/n2k_spatial_and_descriptive_end2018/Tabular_2/SPECIES.txt"
+n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Mapping/02_output/LT/Natura_2000_2017/natura_2000_LT_ETRS89.shp"
+# File that contains the tabular data for Natura 2000 species
+spe_n2k_tab_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/Tabular/SPECIES.txt"
 # Set the output folder
-output_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/LT/Natura_2000_Network_2018/Species"
+output_path <- "02_output/LT/Natura_2000_2017"
 
 
 # Call the function to process Natura 2000 data
