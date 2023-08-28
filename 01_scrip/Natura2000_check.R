@@ -18,7 +18,7 @@ natura_2000_tab_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive
 
 
 # Open spatial data
-natura_2000 <- read_sf(natura_2000_path)
+natura_2000 <- st_read(natura_2000_path)
 
 # Open tabular data
 natura_2000_tab <- read.table(natura_2000_tab_path, 
