@@ -48,12 +48,12 @@ library(dplyr)
 
 # Function
 
-save_combined_habitat_changes <- function(gpkg_file_path_2018, gpkg_file_path_2023, output_file_path) {
+save_combined_habitat_changes <- function(gpkg_file_2018, gpkg_file_2023, output_file) {
   # Read habitats spatial data 2018
-  hab_n2k_2018 <- st_read(gpkg_file_path_2018, layer = "n2k_LT_hab_ETRS89")
+  hab_n2k_2018 <- st_read(gpkg_file_2018, layer = "natura_2000_LT_habitats_ETRS89") # every time when you run the function set the layers name
   
   # Read habitats spatial data 2023
-  hab_n2k_2023 <- st_read(gpkg_file_path_2023, layer = "n2k_LT_hab_ETRS89")
+  hab_n2k_2023 <- st_read(gpkg_file_2023, layer = "natura_2000_LT_habitats_ETRS89") # every time when you run the function set the layers name
   
   # Convert to data frames
   hab_n2k_2018 <- as.data.frame(hab_n2k_2018)
@@ -103,7 +103,7 @@ save_combined_habitat_changes <- function(gpkg_file_path_2018, gpkg_file_path_20
   
   # Save as a geopackage
   country_code <- unique(changes_habitats_2018_2023_sf$MS)
-  geopackage_path <- file.path(output_file_path, paste0(country_code, "_habitats_changes_ETRS89.gpkg"))
+  geopackage_path <- file.path(output_file, paste0("natura_2000_",country_code, "_habitats_changes_ETRS89.gpkg"))
   
   # Write the sf object to the GeoPackage
   st_write(changes_habitats_2018_2023_sf, geopackage_path, driver = "GPKG")
@@ -119,12 +119,14 @@ save_combined_habitat_changes <- function(gpkg_file_path_2018, gpkg_file_path_20
   print("The combined changes have been saved as a GeoPackage.")
 }
 
+# Common base path
+base_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Mapping/02_output/LT"
 
 # Usage:
-gpkg_file_2018 <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/LT/Natura_2000_Network_2018/Habitats/n2k_LT_hab_ETRS89.gpkg"
-gpkg_file_2023 <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/LT/Natura_2000_Network_2023/habitas/n2k_LT_hab_ETRS89.gpkg"
-output_file <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/LT/Changes_Natura_2000_Network_2018_2023/habitats"
+gpkg_file_2017 <- file.path(base_path, "Natura_2000_2017/natura_2000_LT_habitats_ETRS89.gpkg")
+gpkg_file_2023 <- file.path(base_path, "Natura_2000_2023/natura_2000_LT_habitats_ETRS89.gpkg")
+output_file <- file.path(base_path, "Natura_2000_changes_2017_2023")
 
 
 # Run the function
-save_combined_habitat_changes(gpkg_file_2018, gpkg_file_2023, output_file)
+save_combined_habitat_changes(gpkg_file_2017, gpkg_file_2023, output_file)
