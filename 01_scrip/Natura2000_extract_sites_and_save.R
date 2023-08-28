@@ -13,60 +13,44 @@
 # Usage example:
 # country_codes <- c("PL", "LT", "DE")  # List of country codes
 # output_folder <- "path/to/output/folder"
-# extract_and_save_countries(country_codes, n2k, n2000_tabular, output_folder)
+# extract_and_save_countries(country_codes, natura_2000, natura_2000_tab, output_folder)
 
 # Function to extract and save Natura 2000 sites for a given country
 ################################################################################
-
 
 # Remove all objects from the environment
 rm(list=ls())
 gc()
 
 
-# Set the working directory
-
-setwd("I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/data")
-getwd()
+# Set the working directory if needed
+setwd()
 
 
 # Load libraries
-
 library(sf)
 library(tidyverse)
 library(terra)
 library(dplyr)
 
-# Open data set
+# Path spatial and tabular data
+natura_2000_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/FME_60247F61_1692628888782_6276/SHAPE_1/OutputShape/Natura 2000 Spatial Data Official Release ETRS89 LAEA.shp"
+natura_2000_tab_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/Tabular/NATURA2000SITES.txt"
 
-#open the spatial
-n2k_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/data/n2k_spatial_and_descriptive_end2018/Natura2000_end2018_Shapefile/Natura2000_end2018_epsg3035.shp"
-n2000 <- st_read(n2k_path)
+# Open spatial data
+natura_2000 <- st_read(natura_2000_path)
 
-# Check if there are duplicate in the sites 
-length(unique(n2000$SITECODE))
-
-#eliminate all the duplicate data (SITECODE)
-n2k <- unique(n2000)
-
-#open tabular CSV
-n2k_tabular_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/data/n2k_spatial_and_descriptive_end2018/Tabular_2/NATURA2000SITES.csv"
-
-n2k_tabular <- read.csv(n2k_tabular_path,
-                        header = T,
-                        sep = ",",
-                        quote = "\"",
-                        encoding = "UTF-8")
-
-# Check names of columns
-names(n2k_tabular)
-
-path_txt <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/data/n2k_spatial_and_descriptive_end2018/Tabular_2/NATURA2000SITES.txt"
-
-n2k_tabular_txt <- read.table(path_txt,
-                              header = TRUE,
+# Open tabular data
+natura_2000_tab <- read.table(natura_2000_tab_path, 
+                              header = TRUE, 
                               sep = ",",
-                              quote = "\"")
+                              encoding = "UTF-8")
+
+
+# Eliminate duplicates if it is the case
+if (anyDuplicated(natura_2000$SITECODE)) {
+  natura_2000 <- natura_2000[!duplicated(natura_2000$SITECODE), ]
+}
 
 
 
@@ -100,9 +84,6 @@ extract_and_save_country <- function(country_code, spatial_data, tabular_data, o
       print(paste("No extra site codes in spatial data for", country_code))
     }
     
-    country_folder <- file.path(output_path, country_code)
-    dir.create(country_folder, showWarnings = FALSE)
-    
     # # Convert date column to the desired format
     # country_spatial$RELEASE_DA <- format(as.Date(country_spatial$RELEASE_DA), "%m/%d/%Y")
     
@@ -110,21 +91,19 @@ extract_and_save_country <- function(country_code, spatial_data, tabular_data, o
     country_spatial$RELEASE_DA <- as.character(country_spatial$RELEASE_DA)
     
     #write the shapefile with the correct data fromat
-    filename <- file.path(country_folder, paste("n2k_", country_code, "_ETRS89", ".shp", sep = ""))
+    filename <- file.path(output_path, paste("natura_2000_", country_code, "_ETRS89", ".shp", sep = ""))
     writeVector(vect(country_spatial), filename, overwrite = TRUE, options="ENCODING=UTF-8")
   }
 }
-
-
 
 
 # Test of the function
 country_code <- c("LT")
 
 #output path
-output_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Maps/output/LT/Natura_2000_Network_2018"
+output_path <- "02_output/LT/Natura_2000_2017"
 
-extract_and_save_country(country_code, n2k, n2k_tabular, output_path)
+extract_and_save_country(country_code, natura_2000, natura_2000_tab, output_path)
 
 
 
