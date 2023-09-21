@@ -1,0 +1,65 @@
+---
+title: "Documentation for Natura 2000 Data Comparison Script"
+author: "Emmanuel Oceguera-Conchas"
+date: "2023-09-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Overview
+
+This documentation provides instructiones for using the R script that compares spatial and tabular data fot Natura 2000 sites. 
+The script helps identify missing or duplicates sites codes between the two datasets.
+
+## Prerequisites
+
+Before using this script, ensure you have the following:
+
+- R installed on your system
+- Required R packages: `stringr`, `sf`, `tidyverse`, and `dplyr`.
+- The spatial data file for Natura 2000 sites (ESRI Shapefile format).
+- The tabular data file for Natura 2000 sites (CSV format).
+
+## Script usages
+
+1. Open R and set your work directory using `setwd()` function if necesary. Replace `"YOUR_DIRECTORY_PATH"` with the appropiate directory path.
+
+```R
+
+# Set work directory if needed
+setwd("YOUR_DIRECTORY_PATH")
+
+```
+2. Load the required libraries by running the following commands:
+
+```R
+
+# Load libraries
+library(stringr)
+library(sf)
+library(tidyverse)
+library(dplyr
+
+```
+3. Define the file paths for your spatial and tabular data:
+
+```R
+natura_2000_path <- "path/to/spatial/data.shp"
+natura_2000_tab_path <- "path/to/tabular/data.csv"
+
+```
+
+it has to be continued here, just continues explane the script as above.
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
