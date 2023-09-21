@@ -27,8 +27,8 @@ natura_2000_tab <- read.table(natura_2000_tab_path,
                               encoding = "UTF-8")
 
 # View data
-View(natura_2000)
-View(natura_2000_tab)
+#View(natura_2000)
+#View(natura_2000_tab)
 
 # Compare sites codes
 spatial_site_codes <- unique(natura_2000$SITECODE)
