@@ -1,40 +1,27 @@
-#####################################################################
-# Natura 2000 Habitats Changes Analysis and GeoPackage Export Script #
-#####################################################################
+# Natura 2000 Habitats Changes Analysis Script
 
-# Introduction:
-# This user-friendly script is designed to analyze the changes in 
-# Natura 2000 habitats between two time periods and save the results as a GeoPackage.
-# 
+# Description:
+# This script analyzes changes in Natura 2000 habitats between two time periods 
+# and exports the results as a GeoPackage.
+
 # Functionality:
-# The script loads spatial data for Natura 2000 habitats from two 
-# different years stored in GeoPackage files. It then 
-# identifies the changes in habitats and sites between the two periods, categorizing 
-# them as "Remaining in site," "Added to an existing site," or "Added to a new site." 
-# The script also identifies deleted habitats/sites and merges them with additional 
-# columns from the 2018 dataset. The final result is a combined dataset of all changes and deletions.
-# 
+# It loads spatial data for Natura 2000 habitats from two different years and 
+# identifies changes and deletions in habitats/sites.
+# Categories include "Remained in site," "Added to an existing site," or 
+# "Added to a new site." Deleted habitats/sites are also included.
+
 # Dependencies:
-# To run this script, ensure that you have the following libraries 
-# installed: "sf" for spatial data manipulation and "dplyr" for data processing.
-# If not installed, you can do so by running the following commands in R:
-# 
+# Requires R packages "sf" for spatial data and "dplyr" for data processing. Install them using:
 # install.packages("sf")
 # install.packages("dplyr")
-# 
-# Usage:
-# 1. Prepare the GeoPackage files for Natura 2000 habitats in the 2018 and 2023 datasets.
-# 2. Update the file paths for gpkg_file_2018, gpkg_file_2023, and output_file
-#    to point to the respective GeoPackage files and desired output directory.
-# 3. Run the script, and it will perform the analysis and create a GeoPackage 
-#    containing the combined changes in Natura 2000 habitats. Separate layers for 
-#    each habitat code will also be included in the GeoPackage.
-# 
-# Please note that this script assumes the input GeoPackage files have the 
-# necessary data and that the columns for habitats and sites are correctly 
-# formatted.Additionally, the script should be run in an R environment with 
-# the required dependencies installed.
 
+# Usage:
+# 1. Prepare GeoPackage files for Natura 2000 habitats in 2018 and 2023 datasets.
+# 2. Update file paths for gpkg_file_2018, gpkg_file_2023, and output_file.
+# 3. Run the script to perform the analysis and generate a GeoPackage with combined habitat changes, including separate layers for each habitat code.
+
+# Note:
+# Ensure input GeoPackage files have required data and correctly formatted columns. Run in an R environment with dependencies installed.
 
 
 # Remove all objects from the environment
