@@ -34,8 +34,8 @@ library(terra)
 library(dplyr)
 
 # Path spatial and tabular data
-natura_2000_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/FME_60247F61_1692628888782_6276/SHAPE_1/OutputShape/Natura 2000 Spatial Data Official Release ETRS89 LAEA.shp"
-natura_2000_tab_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/Tabular/NATURA2000SITES.txt"
+natura_2000_path <- "/path/to/your/Natura_2000_Spatial_Data.shp"
+natura_2000_tab_path <- "/path/to/your/NATURA2000SITES.txt"
 
 # Open spatial data
 natura_2000 <- st_read(natura_2000_path)
@@ -97,12 +97,13 @@ extract_and_save_country <- function(country_code, spatial_data, tabular_data, o
 }
 
 
-# Test of the function
+# Country code
 country_code <- c("LT")
 
 #output path
-output_path <- "02_output/LT/Natura_2000_2017"
+output_path <- "/path/to/your/output_directory"
 
+# Run the function
 extract_and_save_country(country_code, natura_2000, natura_2000_tab, output_path)
 
 
