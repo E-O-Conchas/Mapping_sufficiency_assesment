@@ -15,7 +15,8 @@ gc()
 
 
 # Set the working directory if needed
-setwd()
+# we set the general output path
+setwd("/path/to/your/outputs")
 
 # Load libraries
 library(sf)
@@ -59,15 +60,15 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
                               by = "SITECODE",
                               multiple = "all")
   
-  # Filter data for sites with habitats
-  #habitats <- left_join_data[!is.na(left_join_data$HABITATCODE),] #don't run this line for the changes analysis
-  hab_n2k_ms <- left_join_data # run this line if you want to obtain all the natura 2000 sites
+  # Filter data for sites with habitats, because not all the habitas has an site attached
+  habitats <- left_join_data[!is.na(left_join_data$HABITATCODE),] #don't run this line for the changes analysis
+  #hab_n2k_ms <- left_join_data # run this line if you want to obtain all the natura 2000 sites
   
   # Changes name 
-  #hab_n2k_ms <- habitats # don´n run this line if you want to obtain all the natura 2000 sites
+  hab_n2k_ms <- habitats # don´n run this line if you want to obtain all the natura 2000 sites
   
   # Add a new column to indicate "D" for rows with "-" in RELSURFACE column
-  hab_n2k_ms$RELSURFACE_D <- ifelse(hab_n2k_ms$RELSURFACE == "-", "D", 
+  hab_n2k_ms$RELSURFACE_CATEGORIES <- ifelse(hab_n2k_ms$RELSURFACE == "-", "Data deficient", 
                                     hab_n2k_ms$RELSURFACE)
   
   # Convert to sf object
@@ -77,7 +78,9 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
   country_code <- unique(hab_n2k_ms$MS)
   
   # Create the GeoPackage file path
-  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_all_sites_ETRS89.gpkg"))
+  #geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_all_sites_ETRS89.gpkg"))
+  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_ETRS89.gpkg"))
+  
   
   # Create the GeoPackage and write the sf object
   layer_name <- paste0("natura_2000_", country_code, "_habitats_ETRS89")
@@ -100,21 +103,24 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
     print("The files have been created and saved in the output path.")
   }
 }
-
+# Set inputs and run the function -----------------------------------------
 
 
 #define the paths of the files to process
-
-# File that contains Natura 2000 site data for Poland
-n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Mapping/02_output/LT/Natura_2000_2017/natura_2000_LT_ETRS89.shp"
-# File that contains the tabular data for Natura 2000 habitats
-hab_n2k_tab_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/Tabular/HABITATS.txt"
-# Set the output folder
-output_path <- "02_output/LT/Natura_2000_2017"
-
+n2k_MS_shp_path <- "/path/to/your/Natura_2000_sites_Polan/n2k_PL_ETRS89.shp"
+hab_n2k_tab_path <- "/path/to/your/HABITATS.txt"
+output_path <- "/path/to/your/output_folder"
 
 # Call the function to process Natura 2000 data
 process_hab_natura2000_data(n2k_MS_shp_path, hab_n2k_tab_path, output_path)
+
+
+
+
+
+
+
+
 
 
 
@@ -122,7 +128,7 @@ process_hab_natura2000_data(n2k_MS_shp_path, hab_n2k_tab_path, output_path)
 # Function to process species in Natura 2000 data and export shapefiles and GeoPackage  
 # Description:
 # This function processes species in Natura 2000 site data for MS.
-# It reads a shapefile containing the spati al data for species in Natura 2000 sites
+# It reads a shapefile containing the spatial data for species in Natura 2000 sites
 # in a MS and joins it with tabular data
 # The function performs data transformations and exports
 # shapefiles for the sites with species and a GeoPackage containing the processed
@@ -133,7 +139,7 @@ process_hab_natura2000_data(n2k_MS_shp_path, hab_n2k_tab_path, output_path)
 # spe_n2k_tab_path: Path to the tabular data file for Natura 2000 species
 # output_path: Path to the output folder where shapefiles and GeoPackage will be saved
 
-#create a function to process species in Natura 2000 data
+# Function to process species within Natura 2000 sites
 process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, output_path) {
   
   # Load the spatial data
@@ -155,11 +161,16 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
                               multiple = "all")
   
   # Filter data for sites with species
-  #species <- left_join_data[!is.na(left_join_data$SPECIESCODE),] #don't run if you want to obtain all the natura 2000 sites 
-  spe_n2k_ms <- left_join_data # if you not run the above line, run this.
+  species <- left_join_data[!is.na(left_join_data$SPECIESCODE),] #don't run if you want to obtain all the natura 2000 sites for the change analisis
+  #spe_n2k_ms <- left_join_data # if you not run the above line, run this.
   
   # Rename the joined data frame
-  #spe_n2k_ms <- species # if you not filter the data, dont run this line.
+  spe_n2k_ms <- species # if you not filter the data, dont run this line.
+  
+  
+  # Add a new column to indicate "Data deficient" for rows with "D" in POPULATION column
+  spe_n2k_ms$POPULATION_CATEGORIES <- ifelse(spe_n2k_ms$POPULATION == "D", "Data deficient", 
+                                             spe_n2k_ms$POPULATION)
   
   # Convert to sf object
   spe_n2k_ms_sf <- st_as_sf(spe_n2k_ms)
@@ -168,7 +179,8 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
   country_code <- unique(spe_n2k_ms$MS)
   
   # Create the GeoPackage file path
-  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_species_all_sites_ETRS89.gpkg"))
+  #geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_species_all_sites_ETRS89.gpkg"))
+  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_species_ETRS89.gpkg"))
   
   # Create the GeoPackage and write the sf object
   layer_name <- paste0("natura_2000_", country_code, "_species_ETRS89")
@@ -192,17 +204,15 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
 }
 
 
+# Set the inputs and run the function -------------------------------------
+
+
 #define the paths of the files to process
+n2k_MS_shp_path <- "/path/to/your/Natura_2000_sites_Polan/n2k_PL_ETRS89.shp"
+spe_n2k_tab_path <- "/path/to/your/SPECIES.txt"
+output_path <- "/path/to/your/output_folder"
 
-# File that contains Natura 2000 site data for the member state
-n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Mapping/02_output/LT/Natura_2000_2017/natura_2000_LT_ETRS89.shp"
-# File that contains the tabular data for Natura 2000 species
-spe_n2k_tab_path <- "I:/biocon/ETC_Data_original/N2K_spatial_and_descriptive_end2017-25.05.2018/Tabular/SPECIES.txt"
-# Set the output folder
-output_path <- "02_output/LT/Natura_2000_2017"
-
-
-# Call the function to process Natura 2000 data
+# Run the function
 process_spe_natura2000_data(n2k_MS_shp_path, spe_n2k_tab_path, output_path)
 
 
