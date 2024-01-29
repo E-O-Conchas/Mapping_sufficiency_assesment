@@ -1,6 +1,6 @@
 ################################################################################
-# Author: no67wuwu
-#  
+# 
+# Author: Emmanuel Oceugera
 # Natura 2000 Data Processing
 # Script: Natura2000_hab_and_sp_data_processing.R
 # 
@@ -9,28 +9,28 @@
 # for Natura 2000 sites in the MS and joins it with tabular data on habitats and 
 # species. The script then performs data transformations and exports shapefiles 
 # and a GeoPackage with the processed data.
-
+#
 ################################################################################
 
-# Clean the envirionment
+# Clean the environment
 rm(list=ls())
 gc()
 
 
-# Setting the working directory
+# Setting working directory
 setwd("I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs")
 getwd()
 
-# Importing the libraries
+# Importing library
 library(sf)
 library(tidyverse)
 library(dplyr)
 library(terra)
 
 
-#################################### HABITATS ####################################
-#
-# Function to process habitats in Natura 2000 data and export shapefiles and GeoPackage
+################################### HABITATS ###################################
+# 
+# Function to process habitats in Natura 2000 data
 # 
 # Description:
 # The function performs data transformations and exports 
@@ -42,24 +42,19 @@ library(terra)
 # hab_n2k_tab_path: Path to the tabular data file for Natura 2000 habitats
 # output_path: Path to the output folder where shapefiles and GeoPackage will be saved
 #
-####################################################################################
-
+################################################################################
 
 ## Check
 n2k_MS_shp_path <- "CY/Natura_2000_sites_v2023/Natura_2000_sites/N2000_Cyprus_ETRS.shp"
 natura2000 <- st_read(n2k_MS_shp_path)
-natura2000$SITENAME <- tolower(natura2000$NaturaName) 
+natura2000 <- natura2000 %>% 
+  select(natura2000[1:-9])
 
-natura2000_t <- natura2000[, c(1,4:12)]
-
-natura2000_t$MS <- stringr::str_extract(natura2000_t$SITECODE, "^.{2}")
-
-st_write(natura2000_t, 'CY/Natura_2000_sites_v2023/Natura_2000_sites/N2000_Cyprus_ETRS_V2.shp')
 
 names(natura2000)
 
 
-
+# Function 
 process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, output_path) {
   
   # Load the spatial data 
@@ -99,7 +94,7 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
   
   # Create the GeoPackage file path
   geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_all_sites_ETRS89.gpkg"))
-  # geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_ETRS89.gpkg"))
+  #geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_ETRS89.gpkg"))
   
   
   # Create the GeoPackage and write the sf object
@@ -125,22 +120,20 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
 }
 
 
+# Set inputs and run the function -----------------------------------------
 
-# Set inputs and run the function
 
-# Define the paths to the data
-n2k_MS_shp_path <- 'CY/Natura_2000_sites_v2023/Natura_2000_sites/N2000_Cyprus_ETRS_V2.shp'
-hab_n2k_tab_path <- 'I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Data_sources/n2k_spatial_and_descriptive_end2022-21.03.2023/n2k_descriptive_sensitive_species/HABITATS.txt'
-output_path <- 'CY/Natura_2000_sites_v2023/Habitats'
+#define the paths of the files to process
+n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/Natura_2000_sites_Lithuania/natura_2000_LT_ETRS89.shp"
+hab_n2k_tab_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/Natura_2000_sites_Lithuania/HABITATS.txt"
+output_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/habitats_new"
 
 hab_n2k_tab <- read.table(hab_n2k_tab_path, 
                           header = TRUE, 
                           sep = ",", 
                           encoding = "UTF-8")
 
-length(hab_n2k_tab$RELSURFACE == "-") 
 
-no_data <- hab_n2k_tab[hab_n2k_tab$RELSURFACE == ""]
 
 # Call the function to process Natura 2000 data
 process_hab_natura2000_data(n2k_MS_shp_path, hab_n2k_tab_path, output_path)
@@ -148,22 +141,29 @@ process_hab_natura2000_data(n2k_MS_shp_path, hab_n2k_tab_path, output_path)
 
 
 
-#################################### SPECIES ###################################
-#
-# Function
-# 
+
+
+
+
+
+
+
+# Species ----------------------------------------------------------------
+# Function to process species in Natura 2000 data and export shapefiles and GeoPackage  
+# Description:
+# This function processes species in Natura 2000 site data for MS.
+# It reads a shapefile containing the spatial data for species in Natura 2000 sites
+# in a MS and joins it with tabular data
 # The function performs data transformations and exports
 # shapefiles for the sites with species and a GeoPackage containing the processed
 # data for further analysis.
-#
+
 # Arguments:
 # n2k_MS_shp_path: Path to the shapefile containing species Natura 2000 site data for the MS
 # spe_n2k_tab_path: Path to the tabular data file for Natura 2000 species
 # output_path: Path to the output folder where shapefiles and GeoPackage will be saved
-#
-################################################################################
 
-
+# Function to process species within Natura 2000 sites
 process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, output_path) {
   
   # Load the spatial data
@@ -185,11 +185,11 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
                               multiple = "all")
   
   # Filter data for sites with species
-  species <- left_join_data[!is.na(left_join_data$SPECIESCODE),] #don't run if you want to obtain all the natura 2000 sites for the change analisis
-  #spe_n2k_ms <- left_join_data # if you dont run the above line, run this.
+  #species <- left_join_data[!is.na(left_join_data$SPECIESCODE),] #don't run if you want to obtain all the natura 2000 sites for the change analisis
+  spe_n2k_ms <- left_join_data # if you dont run the above line, run this.
   
   # Rename the joined data frame
-  spe_n2k_ms <- species # if you not filter the data, dont run this line.
+  #spe_n2k_ms <- species # if you not filter the data, dont run this line.
   
   
   # Add a new column to indicate "Data deficient" for rows with "D" in POPULATION column
@@ -206,8 +206,8 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
   country_code <- unique(spe_n2k_ms$MS)
   
   # Create the GeoPackage file path
-  #geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_species_all_sites_ETRS89.gpkg"))
-  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_species_ETRS89.gpkg"))
+  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_species_all_sites_ETRS89.gpkg"))
+  #geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_species_ETRS89.gpkg"))
   
   # Create the GeoPackage and write the sf object
   layer_name <- paste0("natura_2000_", country_code, "_species_ETRS89")
@@ -235,9 +235,9 @@ process_spe_natura2000_data <- function(n2k_MS_shp_path, spe_n2k_tab_path, outpu
 
 
 #define the paths of the files to process
-n2k_MS_shp_path <- 'CY/Natura_2000_sites_v2023/Natura_2000_sites/N2000_Cyprus_ETRS_V2.shp'
-spe_n2k_tab_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/Data_sources/n2k_spatial_and_descriptive_end2022-21.03.2023/n2k_descriptive_sensitive_species/SPECIES.txt"
-output_path <- 'CY/Natura_2000_sites_v2023/Species'
+n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/Natura_2000_sites_Lithuania/natura_2000_LT_ETRS89.shp"
+spe_n2k_tab_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/Natura_2000_sites_Lithuania/SPECIES.txt"
+output_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/species_new"
 
 
 # Load the tabular Natura 2000 species
@@ -248,6 +248,7 @@ spe_n2k_tab <- read.table(spe_n2k_tab_path,
 
 
 
+unique(spe_n2k_tab$POPULATION)
 
 # Run the function
 process_spe_natura2000_data(n2k_MS_shp_path, spe_n2k_tab_path, output_path)
