@@ -6,19 +6,23 @@ gc()
 library(sf)
 library(dplyr)
 
-setwd("I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/PL")
+# Set you work directory
+setwd("your work directory")
+getwd()
 
 # Define the paths to the data and the layer name
-gpkg_file_2018_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/PL/Natura_2000_sites_v2018/habitats/natura_2000_PL_habitats_all_sites_ETRS89.gpkg"
-gpkg_file_2023_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/PL/Natura_2000_sites_v2023/habitats/natura_2000_PL_habitats_all_sites_ETRS89.gpkg" 
-output_file <- "Changes_Natura2000_sites_v2018_v2023/habitats_new"
+gpkg_file_2018_path <- "Path to the natura 2000 habitats that includes all the site, for the corresponding year"
+gpkg_file_2023_path <- "Path to the natura 2000 habitats that includes all the site, for the corresponding year" 
+output_file <- "Output folder"
 
 # get the layer name
-layer_name <- st_layers(gpkg_file_2023_path)$name[1]
+layer_name <- st_layers(gpkg_file_2018_path)$name[1]
+layer_name_2 <- st_layers(gpkg_file_2023_path)$name[1]
+
 
 # Read habitats spatial data 2018 and 2023 for Poland
-natura2000_hab_2018 <- st_read(gpkg_file_2018_path, layer = layer_name) # every time when you run the function set the layers name
-natura2000_hab_2023 <- st_read(gpkg_file_2023_path, layer = layer_name) # every time when you run the function set the layers name
+natura2000_hab_2018 <- st_read(gpkg_file_2018_path, layer = layer_name) 
+natura2000_hab_2023 <- st_read(gpkg_file_2023_path, layer = layer_name_2) 
 
 # Reduce datasets to necessary columns only
 hab_n2k_2018 <- natura2000_hab_2018 %>% select(SITECODE, HABITATCODE, DESCRIPTION, RELSURFACE_CATEGORIES)
@@ -31,16 +35,8 @@ hab_n2k_2023_df <- as.data.frame(hab_n2k_2023)
 # Check how many Na are in the relsurface
 sum(is.na(hab_n2k_2023_df$RELSURFACE_CATEGORIES))
 
-# Change the data deficient as D category and the NA to -
-hab_n2k_2018_df$RELSURFACE_CATEGORIES <- ifelse(hab_n2k_2018_df$RELSURFACE_CATEGORIES == 'Data deficient', 'D', 
-                                                hab_n2k_2018_df$RELSURFACE_CATEGORIES)
-hab_n2k_2018_df$RELSURFACE_CATEGORIES <- ifelse(is.na(hab_n2k_2018_df$RELSURFACE_CATEGORIES), '-',
-                                                hab_n2k_2018_df$RELSURFACE_CATEGORIES)
+# Free code for checking the data set before performing the categorization analysis
 
-hab_n2k_2023_df$RELSURFACE_CATEGORIES <- ifelse(hab_n2k_2023_df$RELSURFACE_CATEGORIES == 'Data deficient', 'D',
-                                                hab_n2k_2023_df$RELSURFACE_CATEGORIES)
-hab_n2k_2023_df$RELSURFACE_CATEGORIES <- ifelse(is.na(hab_n2k_2023_df$RELSURFACE_CATEGORIES), '-',
-                                                hab_n2k_2023_df$RELSURFACE_CATEGORIES)
 
 # Category 1 "remaining_in_site"
 # Sites and habitat are listed for 2023 and 2018 (no changes)
@@ -50,22 +46,31 @@ remaining_in_site <- hab_n2k_2023_df %>%
   filter(RELSURFACE_CATEGORIES.2023 != "D" & RELSURFACE_CATEGORIES.2018 != "D") %>%
   mutate(CATEGORY = "Remaining in Site")
 
-# Category 2: "Added to an existing sites" --------------------------------
+# Category 2: "Added to an existing sites"
 # Habitats have been listed for an existing site in 2023, and these newly listed Habitats don’t belong to RELSURFACE_CATEGORIES “D”
 # Habitats were categorized as RELSURFACE_CATEGORIES "D" in 2018 but have now been listed and categorized as RELSURFACE_CATEGORIES A, B, C, or "-”
-added_to_existing_site <- hab_n2k_2023_df %>%
+
+# Identify sites that are new in 2023 by using `anti_join` to find SITECODES that do not exist in 2017 data.
+new_sites_2023 <- hab_n2k_2023_df %>%
+  anti_join(hab_n2k_2018_df, by = 'SITECODE')
+
+# For the existing sites, make sure to exclude the newly identified Sites
+existing_sites_2023 <- hab_n2k_2023_df %>%
+  filter(!SITECODE %in% new_sites_2023$SITECODE)	
+
+added_to_existing_site <- existing_sites_2023 %>%
   left_join(hab_n2k_2018_df, by = c("SITECODE", "HABITATCODE"), suffix = c(".2023", ".2018"), multiple = 'all') %>%
   filter((is.na(RELSURFACE_CATEGORIES.2018) & RELSURFACE_CATEGORIES.2023 != "D") |
            (RELSURFACE_CATEGORIES.2018 == "D" & !RELSURFACE_CATEGORIES.2023 %in% c("D"))) %>%
   mutate(CATEGORY = "Added to an existing site")
 
-# category 3: "Added to a new site" ---------------------------------------
+# category 3: "Added to a new site" 
 # Sites and habitats were not listed in 2018 but in 2023 are newly listed 
 # Habitats that are newly listed are categorized as A, B, C, or "-"
-added_to_a_new_site <-  hab_n2k_2023_df %>% 
-  anti_join(hab_n2k_2018_df, by = "SITECODE") %>% 
-  semi_join(hab_n2k_2023_df, by = "HABITATCODE") %>% 
-  filter(RELSURFACE_CATEGORIES %in% c("A", "B", "C", "-")) %>%
+
+# Use Filter to further refine to new habitats that are not marked as "D"
+added_to_a_new_site <-  hab_n2k_2023_df %>%
+  filter(RELSURFACE_CATEGORIES %in% c("A", "B", "C", "")) %>%
   mutate(CATEGORY = "Added to a new site") %>%
   rename(RELSURFACE_CATEGORIES.2023 = RELSURFACE_CATEGORIES)
 
@@ -79,7 +84,6 @@ deleted_from_site <- hab_n2k_2018_df %>%
   mutate(CATEGORY = "Deleted from site") %>%
   rename(RELSURFACE_CATEGORIES.2018 = RELSURFACE_CATEGORIES)
 
-
 # Criteria 2: Population Decline
 realsurface_decline <- hab_n2k_2018_df %>%
   inner_join(hab_n2k_2023_df, by = c("SITECODE", "HABITATCODE"), suffix = c(".2018", ".2023"), multiple = "all") %>%
@@ -87,8 +91,7 @@ realsurface_decline <- hab_n2k_2018_df %>%
   mutate(CATEGORY = "Relsurface declined to D")
 
 
-
-# Combine categories to create the final data set ---------------------------
+# Combine categories to create the final data set 
 changes_habitats_1 <- bind_rows(
   remaining_in_site,
   added_to_existing_site,
@@ -118,8 +121,7 @@ changes_habitats$consolidated_habitats <- ifelse(!is.na(changes_habitats$DESCRIP
 # delete columns we don't need 
 changes_habitats <- changes_habitats %>%
   select(-DESCRIPTION.2018, -DESCRIPTION.2023, -DESCRIPTION) %>%
-  rename(HABITATNAME = consolidated_habitats)
-
+  rename(HABITATNAME = consolidated_habitats)´
 
 # Convert to sf
 changes_habitats_sf <- st_as_sf(changes_habitats) 
@@ -128,7 +130,7 @@ changes_habitats_sf <- st_as_sf(changes_habitats)
 st_crs(changes_habitats_sf) <- 3035 
 
 # Save as a geopackage
-country_code <- 'PL'
+country_code <- 'Set the ISO2 country code'
 geopackage_path <- file.path(output_file, paste0("natura_2000_",country_code, "_habitats_changes_ETRS89.gpkg"))
 
 # Write the sf object to the GeoPackage
