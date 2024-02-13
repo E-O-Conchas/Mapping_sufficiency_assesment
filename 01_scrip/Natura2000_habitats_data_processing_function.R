@@ -19,14 +19,14 @@ gc()
 
 
 # Setting working directory
-setwd("I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs")
+setwd("I:Set your work directory/")
 getwd()
 
 # Importing library
 library(sf)
 library(tidyverse)
 library(dplyr)
-library(terra)
+library(terra)n
 
 
 ################################### HABITATS ###################################
@@ -45,13 +45,6 @@ library(terra)
 #
 ################################################################################
 ## Check (free code)
-n2k_MS_shp_path <- "CY/Natura_2000_sites_v2023/Natura_2000_sites/N2000_Cyprus_ETRS.shp"
-natura2000 <- st_read(n2k_MS_shp_path)
-natura2000 <- natura2000 %>% 
-  select(natura2000[1:-9])
-
-
-names(natura2000)
 
 
 # Function 
@@ -75,12 +68,17 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
                               by = "SITECODE",
                               multiple = "all")
   
-  # Filter data for sites with habitats, because not all the habitas has an site attached
-  #habitats <- left_join_data[!is.na(left_join_data$HABITATCODE),] #don't run this line for the changes analysis
-  hab_n2k_ms <- left_join_data # run this line if you want to obtain all the natura 2000 sites
+  # Filter data based on the value of all_sites parameter
+  if (all_sites) {
+    habitats <- left_join_data
+    file_name_suffix <- "_all_sites"
+  } else {
+    habitats <- left_join_data[!is.na(left_join_data$HABITATCODE),]
+    file_name_suffix <- ""
+  }
   
   # set new name 
-  #hab_n2k_ms <- habitats # don´n run this line if you want to obtain all the natura 2000 sites
+  hab_n2k_ms <- habitats # don´n run this line if you want to obtain all the natura 2000 sites
   
   # Add a new column to indicate "D" for rows with "-" in RELSURFACE column
   hab_n2k_ms$RELSURFACE_CATEGORIES <- ifelse(hab_n2k_ms$RELSURFACE == "-", "D", 
@@ -93,12 +91,10 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
   country_code <- unique(hab_n2k_ms$MS)
   
   # Create the GeoPackage file path
-  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_all_sites_ETRS89.gpkg"))
-  #geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats_ETRS89.gpkg"))
-  
+  geopackage_path <- file.path(output_path, paste0("natura_2000_", country_code, "_habitats", file_name_suffix, "_ETRS89.gpkg"))
   
   # Create the GeoPackage and write the sf object
-  layer_name <- paste0("natura_2000_", country_code, "_habitats_ETRS89")
+  layer_name <- paste0("natura_2000_", country_code, "_habitats", file_name_suffix, "_ETRS89")
   st_write(hab_n2k_ms_sf, geopackage_path, layer = layer_name, driver = "GPKG")
   
   # Create shapefiles for each habitat code in the GeoPackage
@@ -122,18 +118,36 @@ process_hab_natura2000_data <- function(n2k_MS_shp_path, hab_n2k_tab_path, outpu
 
 # Set inputs and run the function
 # Define the paths 
-n2k_MS_shp_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/Natura_2000_sites_Lithuania/natura_2000_LT_ETRS89.shp"
-hab_n2k_tab_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/Natura_2000_sites_Lithuania/HABITATS.txt"
-output_path <- "I:/biocon/Emmanuel_Oceguera/projects/2023_03_ETC_BE/Task 1.1.7.2 Protected areas dataflows/Subtask 2.viii Sufficiency assesment/outputs/LT/Natura_2000_sites_v2017/habitats_new"
-
-# Import tabular data to have a look
-hab_n2k_tab <- read.table(hab_n2k_tab_path, 
-                          header = TRUE, 
-                          sep = ",", 
-                          encoding = "UTF-8")
-
+n2k_MS_shp_path <- 'Set your natura 2000 shapefile for the country to asses'
+hab_n2k_tab_path <- 'Set your habitats tabular data'
+output_path <- 'Set your output folder'
 
 # Run function
-process_hab_natura2000_data(n2k_MS_shp_path, hab_n2k_tab_path, output_path)
+process_hab_natura2000_data(n2k_MS_shp_path, hab_n2k_tab_path, output_path, all_sites = FALSE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
