@@ -1,0 +1,142 @@
+---
+title: "Analysis of Changes in Natura 2000 Habitats"
+author: "Emmanuel Oceguera Conchas"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+---
+
+## Overview
+
+This document outlines the process for analyzing changes in Natura 2000 habitats between two time points (ej. 2018 and 2023). The analysis identifies habitats that have remained, been added, or been removed from sites, facilitating conservation planning and assessment.
+
+## Preparation
+
+### Libraries
+
+The following R libraries are required:
+
+```{r setup, message=FALSE}
+library(sf)
+library(dplyr)
+```
+
+### Setting the Working Directory
+
+It's essential to set the working directory to where your data files are located:
+
+```{r}
+# Replace "your work directory" with the actual path
+setwd("your work directory")
+getwd()
+
+
+```
+
+## Data Loading
+
+### Defining Data Paths
+
+Paths to the GeoPackage files for 2018 and 2023 and the output folder are defined below:
+
+```{r}
+gpkg_file_2018_path <- "Path to the 2018 data"
+gpkg_file_2023_path <- "Path to the 2023 data"
+output_file <- "Output folder"
+```
+
+### Reading the Data
+
+Load and inspect the spatial data from GeoPackage files for both years:
+
+```{r}
+layer_name_2018 <- st_layers(gpkg_file_2018_path)$name[1]
+layer_name_2023 <- st_layers(gpkg_file_2023_path)$name[1]
+
+natura2000_hab_2018 <- st_read(gpkg_file_2018_path, layer = layer_name_2018)
+natura2000_hab_2023 <- st_read(gpkg_file_2023_path, layer = layer_name_2023)
+```
+
+## Data Processing
+
+The data is processed to identify changes in habitat categories across the two years. This section outlines the steps to categorize habitats as remaining in site, added to an existing site, added to a new site, or deleted from a site.
+
+### Example: Remaining in Site
+
+```{r}
+# Example code for categorizing habitats that have remained on the sites 
+remaining_in_site <- hab_n2k_2023_df %>%
+  inner_join(hab_n2k_2018_df, by = c("SITECODE", "HABITATCODE"), suffix = c(".2023", ".2018")) %>%
+  filter(RELSURFACE_CATEGORIES.2023 != "D" & RELSURFACE_CATEGORIES.2018 != "D") %>%
+  mutate(CATEGORY = "Remaining in Site")
+
+```
+
+### Example: Added to an existing site
+
+```{r}
+# Example code for categorizing habitats that have been added to an existing site
+new_sites_2023 <- hab_n2k_2023_df %>%
+  anti_join(hab_n2k_2018_df, by = 'SITECODE')
+
+# Identify sites that are new in 2023 by using `anti_join`
+existing_sites_2023 <- hab_n2k_2023_df %>%
+  filter(!SITECODE %in% new_sites_2023$SITECODE)	
+
+added_to_existing_site <- existing_sites_2023 %>%
+  left_join(hab_n2k_2018_df, by = c("SITECODE", "HABITATCODE"), suffix = c(".2023", ".2018"), multiple = 'all') %>%
+  filter((is.na(RELSURFACE_CATEGORIES.2018) & RELSURFACE_CATEGORIES.2023 != "D") |
+           (RELSURFACE_CATEGORIES.2018 == "D" & !RELSURFACE_CATEGORIES.2023 %in% c("D"))) %>%
+  mutate(CATEGORY = "Added to an existing site")
+
+```
+
+## Combining and Saving Results
+
+After processing, the results are combined and saved as a GeoPackage, with separate layers for each habitat code.
+
+```{r}
+# Combining categories and saving as GeoPackage
+# Combine categories
+changes_habitats_1 <- bind_rows(
+  remaining_in_site,
+  added_to_existing_site,
+  realsurface_decline)
+
+changes_habitats_2 <- bind_rows(
+  added_to_a_new_site,
+  deleted_from_site)
+
+# combine the geom from the changes habitats 1
+changes_habitats_1 <- changes_habitats_1 %>%
+  mutate(geom = coalesce(geom.2023, geom.2018)) %>%
+  select(-geom.2023, -geom.2018)
+
+# combine the two changes of habitats
+changes_habitats <- bind_rows(
+  changes_habitats_1,
+  changes_habitats_2)
+
+
+# consolidate the species names
+changes_habitats$consolidated_habitats <- ifelse(!is.na(changes_habitats$DESCRIPTION.2023), changes_habitats$DESCRIPTION.2023,
+                                                 ifelse(!is.na(changes_habitats$DESCRIPTION.2018), changes_habitats$DESCRIPTION.2018,
+                                                        ifelse(!is.na(changes_habitats$DESCRIPTION), changes_habitats$DESCRIPTION, NA)))
+
+
+# delete columns we don't need 
+changes_habitats <- changes_habitats %>%
+  select(-DESCRIPTION.2018, -DESCRIPTION.2023, -DESCRIPTION) %>%
+  rename(HABITATNAME = consolidated_habitats)
+
+# Convert to sf
+changes_habitats_sf <- st_as_sf(changes_habitats) 
+
+# Example for writing to GeoPackage
+st_write(changes_habitats_sf, geopackage_path, driver = "GPKG")
+
+```
+
+## Conclusion
+
+This document provides a structured approach to analyzing changes in Natura 2000 habitats using R and spatial data packages. It allows for tracking conservation status over time and aids in effective environmental management.
